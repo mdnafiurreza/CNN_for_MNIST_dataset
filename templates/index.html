@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MNIST Digit Classifier</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    function previewImage(event) {
+      var output = document.getElementById('output_image');
+      output.src = URL.createObjectURL(event.target.files[0]);
+      output.onload = function() {
+        URL.revokeObjectURL(output.src)
+      }
+    }
+
+      function selectSample(src) {
+    document.getElementById('output_image').src = src;
+  }
+    
+    async function uploadAndPredict(event) {
+      event.preventDefault();
+      const fileInput = document.getElementById('file');
+      if (!fileInput.files.length) {
+        alert("Please select an image file");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+      const response = await fetch('/predict', {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      if(result.error) {
+        alert(result.error);
+        return;
+      }
+      document.getElementById('result').innerText = "Predicted Digit: " + result.predicted_digit;
+      
+      const ctx = document.getElementById('confidenceChart').getContext('2d');
+      const labels = Array.from({length: 10}, (_, i) => i.toString());
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Confidence Scores',
+            data: result.confidence_scores,
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 1
+            }
+          }
+        }
+      });
+    }
+  </script>
+</head>
+<body>
+  <h1>MNIST Digit Classifier</h1>
+  <form id="uploadForm" onsubmit="uploadAndPredict(event)">
+    <input type="file" id="file" name="file" accept="image/*" onchange="previewImage(event)" />
+    <br><br>
+    <img id="output_image" src="#" alt="Image Preview" style="max-width: 200px;"/>
+    <br><br>
+    <button type="submit">Predict</button>
+  </form>
+  <br>
+  <div id="result"></div>
+  <canvas id="confidenceChart" width="400" height="200"></canvas>
+  <br>
+
+    <h2>Sample MNIST Images</h2>
+    <div id="sample-images">
+
+      <img src="{{ url_for('static', filename='sample_images/sample_0_label_7.png') }}" 
+       alt="Sample MNIST 1" onclick="selectSample(this.src)">
+       <img src="{{ url_for('static', filename='sample_images/sample_1_label_2.png') }}" 
+       alt="Sample MNIST 1" onclick="selectSample(this.src)"> 
+        <img src="{{ url_for('static', filename='sample_images/sample_2_label_1.png') }}" 
+       alt="Sample MNIST 1" onclick="selectSample(this.src)">
+        <img src="{{ url_for('static', filename='sample_images/sample_3_label_0.png') }}" 
+       alt="Sample MNIST 1" onclick="selectSample(this.src)">
+        <img src="{{ url_for('static', filename='sample_images/sample_4_label_4.png') }}" 
+       alt="Sample MNIST 1" onclick="selectSample(this.src)">
+        <img src="{{ url_for('static', filename='sample_images/sample_5_label_1.png') }}" 
+       alt="Sample MNIST 1" onclick="selectSample(this.src)">
+    
+</div>
+    
+</body>
+</html>
