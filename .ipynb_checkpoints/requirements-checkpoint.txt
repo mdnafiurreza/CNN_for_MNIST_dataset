@@ -1,8 +1,0 @@
-torch
-torchvision
-onnx
-onnxruntime
-numpy
-matplotlib
-Flask
-Pillow
